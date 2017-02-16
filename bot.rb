@@ -65,13 +65,19 @@ class BicimapaBot
     end
 
     event :wait_for_category do
-      transition location_received: :category_received
+      transition [:welcoming, :location_received] => :category_received
     end
 
     state :welcoming do
       def reply_message
-	show_help
-	wait_for_location
+        if is_location_attachment
+	  session[:latlng] = @message.attachments.first['payload']['coordinates']
+	  show_category_choice
+          wait_for_category
+        else
+	  show_help
+	  wait_for_location
+        end
       end
     end
 
@@ -262,6 +268,7 @@ Bot.on :message do |message|
 
 	sender_id = message.sender["id"]
 	session = get_session(sender_id)
+
 
 	bot = BicimapaBot.new(session)
 	bot.process_message(message)
