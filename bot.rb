@@ -88,7 +88,8 @@ class BicimapaBot
 	  show_category_choice
           wait_for_category
         else
-	  @message.reply(text: 'Dónde estas ubicado?');
+	  show_help
+	  wait_for_location
         end
       end
     end
