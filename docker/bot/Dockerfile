@@ -6,10 +6,8 @@ RUN gem install dotenv
 RUN gem install rerun
 RUN gem install redis
 RUN gem install graphql-client
-<<<<<<< HEAD
-=======
 RUN gem install state_machines
->>>>>>> aa70319... Initial commit
+RUN gem install geocoder
 
 
 WORKDIR /usr/src/app

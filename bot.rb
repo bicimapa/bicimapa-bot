@@ -3,6 +3,12 @@ require 'redis'
 require 'graphql/client'
 require 'graphql/client/http'
 require 'state_machines'
+require 'geocoder'
+
+Geocoder.configure(
+  :lookup => :google,
+  :api_key => ENV['GOOGLE_MAP_API_KEY']
+)
 
 $redis = Redis.new(host: 'redis')
 
@@ -88,8 +94,28 @@ class BicimapaBot
 	  show_category_choice
           wait_for_category
         else
-	  show_help
-	  wait_for_location
+	  results = Geocoder.search(@message.text)
+	  if results.count == 1
+	    lat = results.first.geometry["location"]['lat']
+	    lng = results.first.geometry["location"]['lng']
+	    @message.reply(attachment: 
+              {
+                type: "image",
+                payload: { url: "https://maps.googleapis.com/maps/api/staticmap?center=#{lat},#{lng}&zoom=11&scale=1&size=600x300&maptype=roadmap&key=#{ENV['GOOGLE_MAP_API_KEY']}&format=png&visual_refresh=true&markers=size:mid%7Ccolor:0xff0000%7C#{lat},#{lng}" }
+	      }
+	    )
+            session[:latlng] = {lat: lat, long: lng }
+	    show_category_choice
+            wait_for_category
+	  elsif results.count == 0
+            @message.reply(text: "No pudimos encontrar la ubicacion")
+	    show_help
+	    wait_for_location
+	  else
+            @message.reply(text: "#{results.count} resultados coresponden a esta ubicacion, necesitamos mas detalles para encontrarla")
+	    show_help
+	    wait_for_location
+          end
         end
       end
     end
